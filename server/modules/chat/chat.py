@@ -27,7 +27,13 @@ class ChatServerHandler():
     def user_name_getter_setter(self):
         self.user_name=self.conn.recv(BUFFER_SIZE).decode().strip()
         with connected_host_lock:
-            connected_hosts[self.user_name]={"address":self.addr,"conn":self.conn}
+            if self.user_name not in connected_hosts:
+                connected_hosts[self.user_name]={"address":self.addr,"conn":self.conn}
+                return True
+            else:
+                return False
+        print("User exist")
+        self.conn.sendall("False:Username already exists,Try again with different username")
 
     def client_broadcaster(self,username,state):
         with connected_host_lock:
@@ -77,11 +83,17 @@ class ChatServerHandler():
     def start(self):
         try:
             self.conn.sendall("connected succecssfully".encode())
-            self.user_name_getter_setter()
+            while True:
+                username_set_result=self.user_name_getter_setter()
+                if username_set_result:
+                    break
+
             print(f"user:{self.user_name} [{self.addr[0]}] is connected")
-            self.conn.sendall("Username setted succecssfully\nyou can chat now !".encode())
+            print(connected_hosts)
+            self.conn.sendall("True:Username setted succecssfully,you can chat now !".encode())
             self.client_broadcaster(self.user_name,"joined")
             self.user_message_receiver()
+
         except Exception:
             print("Error")
         finally:
