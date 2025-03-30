@@ -1,10 +1,22 @@
 try:
-    from modules import connected_hosts,connected_host_lock
+    from threading import Lock
 
 except ImportError as Ie:
     print(f"Error [modules.Chat]: {Ie}")
     
 BUFFER_SIZE=2048
+
+connected_hosts={}
+connected_host_lock=Lock()
+
+#TODO list :-
+#   -> Add user authentication and room authentication
+#   -> Add /basic cmds like /kick , /users ,/ban ,/unban ,/help to server
+#   -> Username should be unique.
+#   -> Use curses for simple GUI
+#   -> Exchange keys between clien and server before chat.
+#   -> Encrypt the data before send. 
+
 
 class ChatServerHandler():
     def __init__(self, conn, addr):
