@@ -1,6 +1,6 @@
 try:
     import json
-    from threading import Lock
+    from threading import Event,Lock
     from modules.auth.authenticator import CryptiHubAuthenticator
 
 except ImportError as Ie:
@@ -10,10 +10,10 @@ BUFFER_SIZE=2048
 
 connected_host_lock=Lock()
 connected_hosts={}
-
+stop_event=Event()
 
 #TODO list :-
-#   -> Add room authentication
+#   -> Add room authentication                                              ✓
 #   -> Add /basic cmds like /kick , /users ,/ban ,/unban ,/help to server
 #   -> Username should be unique.                                           ✓
 #   -> Use curses for simple GUI
@@ -87,7 +87,7 @@ class ChatServerHandler():
         self.info_broadcaster(self.user_name,"left")
             
     def user_message_receiver(self):
-        while True:
+        while not stop_event.is_set():
             try:
                 user_message=self.conn.recv(BUFFER_SIZE).decode().strip().lower()
                 if not user_message:
@@ -124,9 +124,14 @@ class ChatServerHandler():
                 self.user_message_receiver()
             else:
                 self.conn.close()
+        except BrokenPipeError:
+            pass
+            # TODO : Use this below info for logging.
+            # Client {self.addr} Left in room id verification stage 
 
         except Exception as E:
-            print(f"Error : {E}")
+            print(f"Unexpected Exception [modules.chat]: {E}")
+
         finally:
             self.conn.close()
         
