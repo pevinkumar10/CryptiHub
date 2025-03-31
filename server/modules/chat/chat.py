@@ -1,29 +1,33 @@
 try:
+    import json
     from threading import Lock
+    from modules import all_rooms
 
 except ImportError as Ie:
     print(f"Error [modules.Chat]: {Ie}")
-    
+
 BUFFER_SIZE=2048
 
-connected_hosts={}
 connected_host_lock=Lock()
+connected_hosts={}
+
 
 #TODO list :-
-#   -> Add user authentication and room authentication
+#   -> Add room authentication
 #   -> Add /basic cmds like /kick , /users ,/ban ,/unban ,/help to server
-#   -> Username should be unique.
+#   -> Username should be unique.                                           ✓
 #   -> Use curses for simple GUI
 #   -> Exchange keys between clien and server before chat.
 #   -> Encrypt the data before send. 
 
 
 class ChatServerHandler():
-    def __init__(self, conn, addr):
+    def __init__(self, conn, addr,room_id):
         self.user_name=None
         self.conn=conn
         self.addr=addr
-    
+        self.room_id=room_id
+
     def user_name_getter_setter(self):
         self.user_name=self.conn.recv(BUFFER_SIZE).decode().strip()
         with connected_host_lock:
@@ -32,13 +36,13 @@ class ChatServerHandler():
                 return True
             else:
                 try:
-                    self.conn.sendall("False:Username already exists,Try again with different username".encode())
+                    status=json.dumps({"status":"False","message":"Username already exists,Try again with different username"})
+                    self.conn.sendall(status.encode())
                     return False
                 
                 except Exception as E:
                     print(f"Unexpected Exception [modules.chat] :{E}")
-                
-        
+
 
     def info_broadcaster(self,username,state):
         with connected_host_lock:
@@ -93,13 +97,15 @@ class ChatServerHandler():
                 if username_set_result:
                     break
 
+            print(f"Room id: {self.room_id}")
             print(f"user:{self.user_name} [{self.addr[0]}] is connected")
-            self.conn.sendall("True:Username setted succecssfully,you can chat now !".encode())
+            status=json.dumps({"status":"True","message":"Username setted succecssfully,you can chat now !"})
+            self.conn.sendall(status.encode())
             self.info_broadcaster(self.user_name,"joined")
             self.user_message_receiver()
 
-        except Exception:
-            print("Error")
+        except Exception as E:
+            print(f"Error : {E}")
         finally:
             self.conn.close()
         
