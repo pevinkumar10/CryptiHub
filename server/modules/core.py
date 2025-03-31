@@ -5,7 +5,7 @@ try:
     from random import randrange
     from hashlib import md5
     from colorama import Fore,Back,Style
-    from modules import connected_users
+    from modules import connected_users,connected_host_lock
     from modules.chat.chat import ChatServerHandler
     from modules.command.commands import ServerCommands
 
@@ -41,6 +41,17 @@ class CryptiHubCore():
 
         print(f"Room id for this room : {room_hash_id}")
         return room_hash_id
+    
+    def server_brodcaster(self,username,state):
+        with connected_host_lock:
+            for value in connected_users.values():
+                #address=value['address']
+                conn=value['conn']
+                try:
+                    send_message=f"\tserver: {username} has been {state} by admin"
+                    conn.sendall(send_message.encode())
+                except:
+                    print("couldn't proadcast message")
     
     def connection_handler(self):
         room_id=self.generate_room_uid()
@@ -83,6 +94,18 @@ class CryptiHubCore():
                         print(" ")
                     else:
                         print("  No users in the chat !")
+                if "/kick" in cmd:
+                    try:
+                        username=cmd.split(" ")[1]
+                        kicked_user=server_commands.kickout_user(username,connected_users)
+                        # TODO : Bug 
+                        # kicked_user_conn=kicked_user['conn']
+                        # kicked_user_conn.close()
+                        #self.server_brodcaster(username,"kicked")
+                        "{username} kicked from chat."
+                    except IndexError:
+                        print("Usage : /kick <username>")
+
 
             except KeyboardInterrupt:
                 stop_event.set()

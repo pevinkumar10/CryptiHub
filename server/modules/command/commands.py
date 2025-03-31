@@ -25,3 +25,6 @@ class ServerCommands():
 
     def get_all_users(self,users):
         return users.keys()
+    
+    def kickout_user(self,user,users):
+        return users.pop(user)

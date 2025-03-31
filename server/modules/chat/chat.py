@@ -1,7 +1,7 @@
 try:
     import json
     from threading import Event,Lock
-    from modules import connected_users
+    from modules import connected_users,connected_host_lock
     from modules.auth.authenticator import CryptiHubAuthenticator
 
 except ImportError as Ie:
@@ -9,12 +9,11 @@ except ImportError as Ie:
 
 BUFFER_SIZE=2048
 
-connected_host_lock=Lock()
 stop_event=Event()
 
 #TODO list :-
 #   -> Add room authentication                                              ✓
-#   -> Add /basic cmds like /kick , /users ,/ban ,/unban ,/help to server
+#   -> Add /basic cmds like /kick , /users ✓,/ban ,/unban ,/help ✓ to server
 #   -> Username should be unique.                                           ✓
 #   -> Use curses for simple GUI
 #   -> Exchange keys between clien and server before chat.
