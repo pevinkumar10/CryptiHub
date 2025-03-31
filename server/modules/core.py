@@ -5,7 +5,9 @@ try:
     from random import randrange
     from hashlib import md5
     from colorama import Fore,Back,Style
+    from modules import connected_users
     from modules.chat.chat import ChatServerHandler
+    from modules.command.commands import ServerCommands
 
 except ImportError as Ie:
     print(f"Error [Core]: {Ie}")
@@ -14,6 +16,7 @@ HOST=''
 PORT=1234
 
 stop_event=Event()
+server_commands=ServerCommands()
 
 class CryptiHubCore():
     def create_socket(self):
@@ -36,14 +39,14 @@ class CryptiHubCore():
         room_hash_id=tool_name + "_" + hash_for_room.hexdigest().strip()
 
 
-        print(f"Room id for this room :{room_hash_id}")
+        print(f"Room id for this room : {room_hash_id}")
         return room_hash_id
     
     def connection_handler(self):
         room_id=self.generate_room_uid()
         sock=self.create_socket()
         sock.listen()
-        print(f"Server started....\n\t @ {HOST}:{PORT}")
+        print(f"Server started ( {HOST}:{PORT} ):")
         try:
             while not stop_event.is_set():
                 sock.settimeout(1)
@@ -68,8 +71,18 @@ class CryptiHubCore():
         print("",end="")
         while not stop_event.is_set():
             try:
-                cmds=input("Iam echo :")
-                print(cmds)
+                cmd=input("# ")
+                if cmd == "/help":
+                    print(server_commands.help())
+                if cmd == "/users":
+                    all_users=server_commands.get_all_users(connected_users)
+                    if all_users:
+                        print(" ")
+                        for user in all_users:
+                            print("- " + user)
+                        print(" ")
+                    else:
+                        print("  No users in the chat !")
 
             except KeyboardInterrupt:
                 stop_event.set()

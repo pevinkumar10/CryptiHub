@@ -1,6 +1,7 @@
 try:
     import json
     from threading import Event,Lock
+    from modules import connected_users
     from modules.auth.authenticator import CryptiHubAuthenticator
 
 except ImportError as Ie:
@@ -9,7 +10,6 @@ except ImportError as Ie:
 BUFFER_SIZE=2048
 
 connected_host_lock=Lock()
-connected_hosts={}
 stop_event=Event()
 
 #TODO list :-
@@ -32,8 +32,8 @@ class ChatServerHandler():
     def user_name_getter_setter(self):
         self.user_name=self.conn.recv(BUFFER_SIZE).decode().strip()
         with connected_host_lock:
-            if self.user_name not in connected_hosts:
-                connected_hosts[self.user_name]={"address":self.addr,"conn":self.conn}
+            if self.user_name not in connected_users:
+                connected_users[self.user_name]={"address":self.addr,"conn":self.conn}
                 return True
             else:
                 try:
@@ -58,7 +58,7 @@ class ChatServerHandler():
 
     def info_broadcaster(self,username,state):
         with connected_host_lock:
-            for value in connected_hosts.values():
+            for value in connected_users.values():
                 address=value['address']
                 conn=value['conn']
                 if address != self.addr:
@@ -70,7 +70,7 @@ class ChatServerHandler():
 
     def message_broadcaster(self,message):
         with connected_host_lock:
-            for value in connected_hosts.values():
+            for value in connected_users.values():
                 address=value['address']
                 conn=value['conn']
                 if address != self.addr:
@@ -82,8 +82,8 @@ class ChatServerHandler():
     
     def user_remover_from_chat(self):
         with connected_host_lock:
-            if self.user_name in connected_hosts:
-                del connected_hosts[self.user_name]
+            if self.user_name in connected_users:
+                del connected_users[self.user_name]
         self.info_broadcaster(self.user_name,"left")
             
     def user_message_receiver(self):
@@ -116,8 +116,8 @@ class ChatServerHandler():
                     username_set_result=self.user_name_getter_setter()
                     if username_set_result:
                         break
-
-                print(f"user:{self.user_name} [{self.addr[0]}] is connected")
+                # TODO : Use this below info for logging.           
+                #print(f"user:{self.user_name} [{self.addr[0]}] is connected")
                 status=json.dumps({"status":"True","message":"Username setted succecssfully,you can chat now !"})
                 self.conn.sendall(status.encode())
                 self.info_broadcaster(self.user_name,"joined")
