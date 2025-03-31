@@ -31,11 +31,16 @@ class ChatServerHandler():
                 connected_hosts[self.user_name]={"address":self.addr,"conn":self.conn}
                 return True
             else:
-                return False
-        print("User exist")
-        self.conn.sendall("False:Username already exists,Try again with different username")
+                try:
+                    self.conn.sendall("False:Username already exists,Try again with different username".encode())
+                    return False
+                
+                except Exception as E:
+                    print(f"Unexpected Exception [modules.chat] :{E}")
+                
+        
 
-    def client_broadcaster(self,username,state):
+    def info_broadcaster(self,username,state):
         with connected_host_lock:
             for value in connected_hosts.values():
                 address=value['address']
@@ -63,7 +68,7 @@ class ChatServerHandler():
         with connected_host_lock:
             if self.user_name in connected_hosts:
                 del connected_hosts[self.user_name]
-        self.client_broadcaster(self.user_name,"left")
+        self.info_broadcaster(self.user_name,"left")
             
     def user_message_receiver(self):
         while True:
@@ -89,9 +94,8 @@ class ChatServerHandler():
                     break
 
             print(f"user:{self.user_name} [{self.addr[0]}] is connected")
-            print(connected_hosts)
             self.conn.sendall("True:Username setted succecssfully,you can chat now !".encode())
-            self.client_broadcaster(self.user_name,"joined")
+            self.info_broadcaster(self.user_name,"joined")
             self.user_message_receiver()
 
         except Exception:
