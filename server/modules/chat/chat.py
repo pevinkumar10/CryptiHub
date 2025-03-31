@@ -1,7 +1,7 @@
 try:
     import json
     from threading import Lock
-    from modules import all_rooms
+    from modules.auth.authenticator import CryptiHubAuthenticator
 
 except ImportError as Ie:
     print(f"Error [modules.Chat]: {Ie}")
@@ -27,6 +27,7 @@ class ChatServerHandler():
         self.conn=conn
         self.addr=addr
         self.room_id=room_id
+        self.authenticator=CryptiHubAuthenticator()
 
     def user_name_getter_setter(self):
         self.user_name=self.conn.recv(BUFFER_SIZE).decode().strip()
@@ -43,6 +44,17 @@ class ChatServerHandler():
                 except Exception as E:
                     print(f"Unexpected Exception [modules.chat] :{E}")
 
+    def room_authenticator(self):
+        room_id=self.conn.recv(BUFFER_SIZE).decode().strip()
+        room_auth_status=self.authenticator.room_authenticator(self.room_id,room_id)
+        if room_auth_status:
+            status=json.dumps({"status":"True","message":"Room authenticated successfully !"})
+            self.conn.sendall(status.encode())
+            return True
+        else:
+            status=json.dumps({"status":"False","message":"Invalid room id"})
+            self.conn.sendall(status.encode())
+            return False
 
     def info_broadcaster(self,username,state):
         with connected_host_lock:
@@ -90,19 +102,28 @@ class ChatServerHandler():
         self.conn.close()
         
     def start(self):
+        self.conn.sendall("connected succecssfully".encode())
         try:
-            self.conn.sendall("connected succecssfully".encode())
-            while True:
-                username_set_result=self.user_name_getter_setter()
-                if username_set_result:
+            # Room Atuthentication started.
+            for attempt in range(1,4):
+                room_authenticaor_status=self.room_authenticator()
+                if room_authenticaor_status:
                     break
+            
+            # Username configuration started.
+            if room_authenticaor_status:
+                while True:
+                    username_set_result=self.user_name_getter_setter()
+                    if username_set_result:
+                        break
 
-            print(f"Room id: {self.room_id}")
-            print(f"user:{self.user_name} [{self.addr[0]}] is connected")
-            status=json.dumps({"status":"True","message":"Username setted succecssfully,you can chat now !"})
-            self.conn.sendall(status.encode())
-            self.info_broadcaster(self.user_name,"joined")
-            self.user_message_receiver()
+                print(f"user:{self.user_name} [{self.addr[0]}] is connected")
+                status=json.dumps({"status":"True","message":"Username setted succecssfully,you can chat now !"})
+                self.conn.sendall(status.encode())
+                self.info_broadcaster(self.user_name,"joined")
+                self.user_message_receiver()
+            else:
+                self.conn.close()
 
         except Exception as E:
             print(f"Error : {E}")

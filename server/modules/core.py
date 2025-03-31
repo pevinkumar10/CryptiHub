@@ -30,7 +30,7 @@ class CryptiHubCore():
         random_number=randrange(10000,50000)
         random_salt = str(current_time) + "_" + str(random_number)
         hash_for_room=md5(random_salt.encode())
-        room_hash_id=tool_name + "_" + hash_for_room.hexdigest()
+        room_hash_id=tool_name + "_" + hash_for_room.hexdigest().strip()
 
 
         print(f"Room id for this room :{room_hash_id}")
