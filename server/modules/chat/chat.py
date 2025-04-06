@@ -47,7 +47,7 @@ class ChatServerHandler():
         room_id=self.conn.recv(BUFFER_SIZE).decode().strip()
         room_auth_status=self.authenticator.room_authenticator(self.room_id,room_id)
         if room_auth_status:
-            status=json.dumps({"status":"True","message":"Room authenticated successfully !"})
+            status=json.dumps({"status":"True","message":"Room authenticated !"})
             self.conn.sendall(status.encode())
             return True
         else:
@@ -64,8 +64,8 @@ class ChatServerHandler():
                     try:
                         send_message=f"\tserver: {username} is {state} the chat"
                         conn.sendall(send_message.encode())
-                    except:
-                        print("couldn't proadcast message")
+                    except Exception as E:
+                        print(f"couldn't proadcast message [info_brodcaster]: {E}")
 
     def message_broadcaster(self,message):
         with connected_host_lock:
@@ -76,8 +76,9 @@ class ChatServerHandler():
                     try:
                         send_message=f"{self.user_name} :{message}"
                         conn.sendall(send_message.encode())
-                    except:
-                        print("couldn't proadcast message")
+                        
+                    except Exception as E:
+                        print(f"couldn't proadcast message [message_brodcaster]: {E}")
     
     def user_remover_from_chat(self):
         with connected_host_lock:

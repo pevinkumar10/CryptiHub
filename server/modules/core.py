@@ -94,17 +94,18 @@ class CryptiHubCore():
                         print(" ")
                     else:
                         print("  No users in the chat !")
-                if "/kick" in cmd:
-                    try:
-                        username=cmd.split(" ")[1]
-                        kicked_user=server_commands.kickout_user(username,connected_users)
-                        # TODO : Bug 
-                        # kicked_user_conn=kicked_user['conn']
-                        # kicked_user_conn.close()
-                        #self.server_brodcaster(username,"kicked")
-                        "{username} kicked from chat."
-                    except IndexError:
-                        print("Usage : /kick <username>")
+                # if "/kick" in cmd:
+                #     try:
+                #         username=cmd.split(" ")[1]
+                #         kicked_user=server_commands.kickout_user(username)
+                #         print(kicked_user)
+                #         # TODO : Bug 
+                #         # kicked_user_conn=kicked_user['conn']
+                #         # kicked_user_conn.close()
+                #         #self.server_brodcaster(username,"kicked")
+                #         "{username} kicked from chat."
+                #     except IndexError:
+                #         print("Usage : /kick <username>")
 
 
             except KeyboardInterrupt:
