@@ -22,15 +22,18 @@ class ChatServerHandler():
         self.authenticator=CryptiHubAuthenticator()
 
     def user_name_getter_setter(self):
-        self.user_name=self.conn.recv(BUFFER_SIZE).decode().strip()
+        encrypted_username = self.conn.recv(BUFFER_SIZE).decode().strip()
+
+        self.user_name = self.cryptographic_handler.decrypt_message(encrypted_username)
+
         with connected_host_lock:
             if self.user_name not in connected_users:
                 connected_users[self.user_name]={"address":self.addr,"conn":self.conn}
                 return True
             else:
                 try:
-                    send_message=json.dumps({"status":"False","message":"Username already exists,Try again with different username"})
-                    encrypted_message = self.cryptographic_handler.encrpt_message(send_message)
+                    status=json.dumps({"status":"False","message":"Username already exists,Try again with different username"})
+                    encrypted_message = self.cryptographic_handler.encrpt_message(status)
                     self.conn.sendall(encrypted_message)
                     return False
                 
@@ -38,16 +41,20 @@ class ChatServerHandler():
                     print(f"Unexpected Exception [modules.chat] :{E}")
 
     def room_authenticator(self):
-        room_id=self.conn.recv(BUFFER_SIZE).decode().strip()
-        room_auth_status=self.authenticator.room_authenticator(self.room_id,room_id)
+
+        encrypted_room_id = self.conn.recv(BUFFER_SIZE).decode().strip()
+        decrypted_room_id = self.cryptographic_handler.decrypt_message(encrypted_room_id)
+
+        room_auth_status=self.authenticator.room_authenticator(self.room_id,decrypted_room_id)
+
         if room_auth_status:
-            send_message=json.dumps({"status":"True","message":"Room authenticated !"})
-            encrypted_message = self.cryptographic_handler.encrpt_message(send_message)
+            status=json.dumps({"status":"True","message":"Room authenticated !"})
+            encrypted_message = self.cryptographic_handler.encrpt_message(status)
             self.conn.sendall(encrypted_message)
             return True
         else:
-            send_message=json.dumps({"status":"False","message":"Invalid room id"})
-            encrypted_message = self.cryptographic_handler.encrpt_message(send_message)
+            status=json.dumps({"status":"False","message":"Invalid room id"})
+            encrypted_message = self.cryptographic_handler.encrpt_message(status)
             self.conn.sendall(encrypted_message)
             return False
 
@@ -58,8 +65,8 @@ class ChatServerHandler():
                 conn=value['conn']
                 if address != self.addr:
                     try:
-                        send_message=f"\tserver: {username} is {state} the chat"
-                        encrypted_message = self.cryptographic_handler.encrpt_message(send_message)
+                        status=f"\tserver: {username} is {state} the chat"
+                        encrypted_message = self.cryptographic_handler.encrpt_message(status)
                         conn.sendall(encrypted_message)
                     except Exception as E:
                         print(f"couldn't proadcast message [info_brodcaster]: {E}")
@@ -71,8 +78,8 @@ class ChatServerHandler():
                 conn=value['conn']
                 if address != self.addr:
                     try:
-                        send_message=f"{self.user_name} :{message}"
-                        encrypted_message = self.cryptographic_handler.encrpt_message(send_message)
+                        status=f"{self.user_name} :{message}"
+                        encrypted_message = self.cryptographic_handler.encrpt_message(status)
                         conn.sendall(encrypted_message)
                         
                     except Exception as E:
@@ -87,22 +94,23 @@ class ChatServerHandler():
     def user_message_receiver(self):
         while not stop_event.is_set():
             try:
-                user_message=self.conn.recv(BUFFER_SIZE).decode().strip().lower()
-                if not user_message:
+                encrypted_message=self.conn.recv(BUFFER_SIZE).decode().strip().lower()
+                decrypted_message = self.cryptographic_handler.decrypt_message(encrypted_message)
+                
+                if not encrypted_message:
                     break
-                if user_message in ["quit","exit"]:
+                if decrypted_message in ["quit","exit"]:
                     break
                 else:
-                    self.message_broadcaster(user_message)
+                    self.message_broadcaster(decrypted_message)
             except(ConnectionResetError, ConnectionAbortedError, OSError):
                 break
         self.user_remover_from_chat()
         self.conn.close()
         
     def start(self):
-        send_message = "connected succecssfully"
-        encrypted_message = self.cryptographic_handler.encrpt_message(send_message)
-        self.conn.sendall(encrypted_message)
+        status = "connected succecssfully"
+        self.conn.sendall(status.encode())
         try:
             # Room Atuthentication started.
             for attempt in range(1,4):
@@ -118,8 +126,8 @@ class ChatServerHandler():
                         break
                 # TODO : Use this below info for logging.           
                 #print(f"user:{self.user_name} [{self.addr[0]}] is connected")
-                send_message=json.dumps({"status":"True","message":"Username setted succecssfully,you can chat now !"})
-                encrypted_message = self.cryptographic_handler.encrpt_message(send_message)
+                status=json.dumps({"status":"True","message":"Username setted succecssfully,you can chat now !"})
+                encrypted_message = self.cryptographic_handler.encrpt_message(status)
 
                 self.conn.sendall(encrypted_message)
                 self.info_broadcaster(self.user_name,"joined")

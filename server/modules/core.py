@@ -51,8 +51,8 @@ class CryptiHubCore():
             for value in connected_users.values():
                 conn=value['conn']
                 try:
-                    send_message=f"\tserver: {username} has been {state} by admin"
-                    encrypted_message = self.cryptographic_handler.encrpt_message(send_message)
+                    status=f"\tserver: {username} has been {state} by admin"
+                    encrypted_message = self.cryptographic_handler.encrpt_message(status)
                     
                     conn.sendall(encrypted_message.encode())
                 except:
