@@ -21,7 +21,7 @@ class CryptoGraphicHandler:
             salt=salt,
             iterations=1200000,
         )
-        key = urlsafe_b64encode(kdf.derive(self.password))
+        key = urlsafe_b64encode(kdf.derive(self.password.encode()))
         fernet = Fernet(key)
 
         encrypted_message=fernet.encrypt(message.encode())

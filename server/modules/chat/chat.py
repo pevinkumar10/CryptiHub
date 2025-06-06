@@ -6,7 +6,7 @@ try:
     from modules.auth.authenticator import CryptiHubAuthenticator
 
 except ImportError as Ie:
-    print(f"Error [modules.Chat]: {Ie}")
+    print(f"Import Error [modules.Chat]: {Ie}")
 
 BUFFER_SIZE=2048
 
@@ -29,8 +29,9 @@ class ChatServerHandler():
                 return True
             else:
                 try:
-                    status=json.dumps({"status":"False","message":"Username already exists,Try again with different username"})
-                    self.conn.sendall(status.encode())
+                    send_message=json.dumps({"status":"False","message":"Username already exists,Try again with different username"})
+                    encrypted_message = self.cryptographic_handler.encrpt_message(send_message)
+                    self.conn.sendall(encrypted_message)
                     return False
                 
                 except Exception as E:
@@ -40,12 +41,14 @@ class ChatServerHandler():
         room_id=self.conn.recv(BUFFER_SIZE).decode().strip()
         room_auth_status=self.authenticator.room_authenticator(self.room_id,room_id)
         if room_auth_status:
-            status=json.dumps({"status":"True","message":"Room authenticated !"})
-            self.conn.sendall(status.encode())
+            send_message=json.dumps({"status":"True","message":"Room authenticated !"})
+            encrypted_message = self.cryptographic_handler.encrpt_message(send_message)
+            self.conn.sendall(encrypted_message)
             return True
         else:
-            status=json.dumps({"status":"False","message":"Invalid room id"})
-            self.conn.sendall(status.encode())
+            send_message=json.dumps({"status":"False","message":"Invalid room id"})
+            encrypted_message = self.cryptographic_handler.encrpt_message(send_message)
+            self.conn.sendall(encrypted_message)
             return False
 
     def info_broadcaster(self,username,state):
@@ -57,7 +60,7 @@ class ChatServerHandler():
                     try:
                         send_message=f"\tserver: {username} is {state} the chat"
                         encrypted_message = self.cryptographic_handler.encrpt_message(send_message)
-                        conn.sendall(encrypted_message.encode())
+                        conn.sendall(encrypted_message)
                     except Exception as E:
                         print(f"couldn't proadcast message [info_brodcaster]: {E}")
 
@@ -70,7 +73,7 @@ class ChatServerHandler():
                     try:
                         send_message=f"{self.user_name} :{message}"
                         encrypted_message = self.cryptographic_handler.encrpt_message(send_message)
-                        conn.sendall(encrypted_message.encode())
+                        conn.sendall(encrypted_message)
                         
                     except Exception as E:
                         print(f"couldn't proadcast message [message_brodcaster]: {E}")
@@ -99,7 +102,7 @@ class ChatServerHandler():
     def start(self):
         send_message = "connected succecssfully"
         encrypted_message = self.cryptographic_handler.encrpt_message(send_message)
-        self.conn.sendall(encrypted_message.encode())
+        self.conn.sendall(encrypted_message)
         try:
             # Room Atuthentication started.
             for attempt in range(1,4):
@@ -115,8 +118,10 @@ class ChatServerHandler():
                         break
                 # TODO : Use this below info for logging.           
                 #print(f"user:{self.user_name} [{self.addr[0]}] is connected")
-                status=json.dumps({"status":"True","message":"Username setted succecssfully,you can chat now !"})
-                self.conn.sendall(status.encode())
+                send_message=json.dumps({"status":"True","message":"Username setted succecssfully,you can chat now !"})
+                encrypted_message = self.cryptographic_handler.encrpt_message(send_message)
+
+                self.conn.sendall(encrypted_message)
                 self.info_broadcaster(self.user_name,"joined")
                 self.user_message_receiver()
             else:

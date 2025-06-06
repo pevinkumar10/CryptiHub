@@ -40,7 +40,7 @@ class CryptiHubCore():
         random_salt = str(current_time) + "_" + str(random_number)
         hash_for_room=md5(random_salt.encode())
         room_id=tool_name + "_" + hash_for_room.hexdigest().strip()
-
+        
         self.connection_handler = CryptoGraphicHandler(password=room_id)
 
         print(f"Room id for this room : {room_id}")
