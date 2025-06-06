@@ -1,10 +1,14 @@
-import tkinter as tk
-from tkinter import scrolledtext
-import socket
-import json
-from threading import Thread, Event
+try:
+    import tkinter as tk
+    from tkinter import scrolledtext
+    import socket
+    import json
+    from threading import Thread, Event
 
-HOST = '192.168.33.97'
+except ImportError as Ie:
+    print(f"Import Error [client]: {Ie}")
+
+HOST = ''
 PORT = 1234
 BUFFER_SIZE = 1024
 
@@ -35,7 +39,6 @@ class ChatClient:
             banner = self.sock.recv(BUFFER_SIZE).decode()
             self.update_chat(f"\tServer: {banner}")
             
-            # Here you could pop up a GUI for room_id and username input
             if not self.room_verification():
                 self.update_chat("Failed room verification.")
                 return

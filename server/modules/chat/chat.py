@@ -1,7 +1,8 @@
 try:
     import json
-    from threading import Event,Lock
+    from threading import Event
     from modules import connected_users,connected_host_lock
+    from modules.cryptography.cryptographer import CryptoGraphicHandler
     from modules.auth.authenticator import CryptiHubAuthenticator
 
 except ImportError as Ie:
@@ -11,21 +12,13 @@ BUFFER_SIZE=2048
 
 stop_event=Event()
 
-#TODO list :-
-#   -> Add room authentication                                              ✓
-#   -> Add /basic cmds like /kick , /users ✓,/ban ,/unban ,/help ✓ to server
-#   -> Username should be unique.                                           ✓
-#   -> Use curses for simple GUI
-#   -> Exchange keys between clien and server before chat.
-#   -> Encrypt the data before send. 
-
-
 class ChatServerHandler():
     def __init__(self, conn, addr,room_id):
         self.user_name=None
         self.conn=conn
         self.addr=addr
         self.room_id=room_id
+        self.cryptographic_handler = CryptoGraphicHandler(password=self.room_id)
         self.authenticator=CryptiHubAuthenticator()
 
     def user_name_getter_setter(self):
@@ -63,7 +56,8 @@ class ChatServerHandler():
                 if address != self.addr:
                     try:
                         send_message=f"\tserver: {username} is {state} the chat"
-                        conn.sendall(send_message.encode())
+                        encrypted_message = self.cryptographic_handler.encrpt_message(send_message)
+                        conn.sendall(encrypted_message.encode())
                     except Exception as E:
                         print(f"couldn't proadcast message [info_brodcaster]: {E}")
 
@@ -75,7 +69,8 @@ class ChatServerHandler():
                 if address != self.addr:
                     try:
                         send_message=f"{self.user_name} :{message}"
-                        conn.sendall(send_message.encode())
+                        encrypted_message = self.cryptographic_handler.encrpt_message(send_message)
+                        conn.sendall(encrypted_message.encode())
                         
                     except Exception as E:
                         print(f"couldn't proadcast message [message_brodcaster]: {E}")
@@ -102,7 +97,9 @@ class ChatServerHandler():
         self.conn.close()
         
     def start(self):
-        self.conn.sendall("connected succecssfully".encode())
+        send_message = "connected succecssfully"
+        encrypted_message = self.cryptographic_handler.encrpt_message(send_message)
+        self.conn.sendall(encrypted_message.encode())
         try:
             # Room Atuthentication started.
             for attempt in range(1,4):

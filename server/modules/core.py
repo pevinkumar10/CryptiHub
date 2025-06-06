@@ -4,13 +4,13 @@ try:
     from datetime import datetime
     from random import randrange
     from hashlib import md5
-    from colorama import Fore,Back,Style
     from modules import connected_users,connected_host_lock
     from modules.chat.chat import ChatServerHandler
     from modules.command.commands import ServerCommands
+    from modules.cryptography.cryptographer import CryptoGraphicHandler
 
 except ImportError as Ie:
-    print(f"Error [Core]: {Ie}")
+    print(f"Couldn't import [Core]: {Ie}")
 
 HOST=''
 PORT=1234
@@ -19,6 +19,9 @@ stop_event=Event()
 server_commands=ServerCommands()
 
 class CryptiHubCore():
+    def __init__(self):
+        self.cryptographic_handler = None
+
     def create_socket(self):
         try:
             sock=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
@@ -36,20 +39,22 @@ class CryptiHubCore():
         random_number=randrange(10000,50000)
         random_salt = str(current_time) + "_" + str(random_number)
         hash_for_room=md5(random_salt.encode())
-        room_hash_id=tool_name + "_" + hash_for_room.hexdigest().strip()
+        room_id=tool_name + "_" + hash_for_room.hexdigest().strip()
 
+        self.connection_handler = CryptoGraphicHandler(password=room_id)
 
-        print(f"Room id for this room : {room_hash_id}")
-        return room_hash_id
+        print(f"Room id for this room : {room_id}")
+        return room_id
     
     def server_brodcaster(self,username,state):
         with connected_host_lock:
             for value in connected_users.values():
-                #address=value['address']
                 conn=value['conn']
                 try:
                     send_message=f"\tserver: {username} has been {state} by admin"
-                    conn.sendall(send_message.encode())
+                    encrypted_message = self.cryptographic_handler.encrpt_message(send_message)
+                    
+                    conn.sendall(encrypted_message.encode())
                 except:
                     print("couldn't proadcast message")
     
@@ -94,20 +99,6 @@ class CryptiHubCore():
                         print(" ")
                     else:
                         print("  No users in the chat !")
-                # if "/kick" in cmd:
-                #     try:
-                #         username=cmd.split(" ")[1]
-                #         kicked_user=server_commands.kickout_user(username)
-                #         print(kicked_user)
-                #         # TODO : Bug 
-                #         # kicked_user_conn=kicked_user['conn']
-                #         # kicked_user_conn.close()
-                #         #self.server_brodcaster(username,"kicked")
-                #         "{username} kicked from chat."
-                #     except IndexError:
-                #         print("Usage : /kick <username>")
-
-
             except KeyboardInterrupt:
                 stop_event.set()
 

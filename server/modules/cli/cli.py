@@ -1,20 +1,24 @@
-import sys
-import argparse
-import requests
-from colorama import Fore,Style 
+try:
+    import sys
+    import argparse
+    import requests
+    from colorama import Fore,Style 
 
-red=Fore.RED
-blue=Fore.BLUE
-white=Fore.WHITE
-magenta=Fore.MAGENTA
-bright=Style.BRIGHT
-green=Fore.GREEN
-red=Fore.RED
-bold=Style.BRIGHT
-yellow=Fore.YELLOW
-cyan=Fore.CYAN
-mixed=Fore.BLUE+Fore.GREEN+Fore.RED
-reset=Style.RESET_ALL
+    red=Fore.RED
+    blue=Fore.BLUE
+    white=Fore.WHITE
+    magenta=Fore.MAGENTA
+    bright=Style.BRIGHT
+    green=Fore.GREEN
+    red=Fore.RED
+    bold=Style.BRIGHT
+    yellow=Fore.YELLOW
+    cyan=Fore.CYAN
+    mixed=Fore.BLUE+Fore.GREEN+Fore.RED
+    reset=Style.RESET_ALL
+    
+except ImportError as Ie:
+    print(f"Error [Core]: {Ie}")
 
 class CommandLine():
     def args(self):
