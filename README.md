@@ -19,14 +19,31 @@ cd CryptiHub
 ### Install dependencies
 
 ```bash
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 ```
+
+## Configuring CryptiHub:
+- Configuring Server:
+    - This is the default HOST and PORT configuration. If you need to change it , then modify it server/modules/core.py
+        ```markdown
+        HOST = ''
+        PORT = 1234
+
+        ```
+- Configuring Client:
+    - This is the default HOST and PORT configuration. If you need to change it , then modify it client/client.py
+        ```markdown
+        HOST = ''
+        PORT = 1234
+
+        ```
+## 
 
 ## Usage
 
 ### Starting the Server
 ```bash
-python server/server.py
+python3 server/server.py
 ```
 
 ### Connecting Clients

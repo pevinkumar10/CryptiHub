@@ -15,7 +15,6 @@ except ImportError as Ie:
 
 HOST = ''
 PORT = 1234
-BUFFER_SIZE = 1024
 
 class CryptoGraphicHandler:
     """
@@ -98,6 +97,8 @@ class ChatClient:
                 None
         """
         self.root = root
+        self.buffer_size = 1024
+
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.cryptogrphic_handler = None
         self.stop_event = Event()
@@ -127,7 +128,7 @@ class ChatClient:
         """
         try:
             self.sock.connect((HOST, PORT))
-            banner = self.sock.recv(BUFFER_SIZE).decode()
+            banner = self.sock.recv(self.buffer_size).decode()
             self.update_chat(f"\tServer: {banner}")
             
             if not self.room_verification():
@@ -162,7 +163,7 @@ class ChatClient:
             encrypted_room_id = self.cryptogrphic_handler.encrpt_message(room_id)
             self.sock.sendall(encrypted_room_id)
 
-            encrypted_room_verification_data = self.sock.recv(BUFFER_SIZE)
+            encrypted_room_verification_data = self.sock.recv(self.buffer_size)
             decrypted_message = self.cryptogrphic_handler.decrypt_message(encrypted_room_verification_data)
 
             result = json.loads(decrypted_message)
@@ -194,7 +195,7 @@ class ChatClient:
             encrypted_data = self.cryptogrphic_handler.encrpt_message(username)
             self.sock.sendall(encrypted_data)
 
-            encrypted_username_set_status = self.sock.recv(BUFFER_SIZE).decode()
+            encrypted_username_set_status = self.sock.recv(self.buffer_size).decode()
             decrypted_message = self.cryptogrphic_handler.decrypt_message(encrypted_username_set_status)
 
             result = json.loads(decrypted_message)
@@ -216,7 +217,7 @@ class ChatClient:
         """
         while not self.stop_event.is_set():
             try:
-                encrypted_data = self.sock.recv(BUFFER_SIZE).decode().strip()
+                encrypted_data = self.sock.recv(self.buffer_size).decode().strip()
                 decrypted_message = self.cryptogrphic_handler.decrypt_message(encrypted_data)
 
                 if not decrypted_message or decrypted_message.lower() == "exit":
