@@ -30,13 +30,12 @@ class CryptoGraphicHandler:
             salt=salt,
             iterations=1200000,
         )
-        key = urlsafe_b64encode(kdf.derive(self.password.encode()))
+        raw_key = kdf.derive(self.password.encode().strip())
+        key = urlsafe_b64encode(raw_key)
         fernet = Fernet(key)
 
         encrypted_message=fernet.encrypt(message.encode())
-        final_message=salt + encrypted_message
-
-        return b64encode(final_message)
+        return b64encode(salt + encrypted_message)
     
     def decrypt_message(self,encrypted_data):
         # Function to decrypt the encrypted data.
@@ -50,7 +49,8 @@ class CryptoGraphicHandler:
             salt=salt,
             iterations=1200000,
         )
-        key = urlsafe_b64encode(kdf.derive(self.password))
+        raw_key = kdf.derive(self.password.encode().strip())
+        key = urlsafe_b64encode(raw_key)
         fernet = Fernet(key)
         decrypted = fernet.decrypt(encrypted_message)
         return decrypted.decode()
@@ -107,9 +107,10 @@ class ChatClient:
             self.cryptogrphic_handler = CryptoGraphicHandler(password=room_id)
 
             encrypted_room_id = self.cryptogrphic_handler.encrpt_message(room_id)
+
             self.sock.sendall(encrypted_room_id)
 
-            encrypted_room_verification_data = self.sock.recv(BUFFER_SIZE).decode()
+            encrypted_room_verification_data = self.sock.recv(BUFFER_SIZE)
             decrypted_message = self.cryptogrphic_handler.decrypt_message(encrypted_room_verification_data)
 
             result = json.loads(decrypted_message)
@@ -122,7 +123,12 @@ class ChatClient:
     def set_username(self):
         while True:
             username = simple_input_popup(self.root, "Enter your username:")
-
+            if username is None or not username.strip():
+                self.update_chat("Username cannot be empty. Please try again.")
+                continue
+            if len(username) > 20:
+                self.update_chat("Username is too long. Please enter a username with 20 characters or less.")
+                continue
             # Encrypting username before sending.
             encrypted_data = self.cryptogrphic_handler.encrpt_message(username)
             self.sock.sendall(encrypted_data)
@@ -154,9 +160,16 @@ class ChatClient:
     def send_message(self):
         send_message = self.entry_field.get().strip()
         if send_message:
-            encrypted_message = self.cryptogrphic_handler.encrpt_message(send_message)
-            self.sock.sendall(encrypted_message)
-            self.entry_field.delete(0, tk.END)
+            if send_message.lower() == "exit":
+                self.update_chat("You have exited the chat.")
+                self.stop_event.set()
+                self.sock.close()
+                self.root.quit()
+            else:
+                self.update_chat(f"You: {send_message}")
+                encrypted_message = self.cryptogrphic_handler.encrpt_message(send_message)
+                self.sock.sendall(encrypted_message)
+                self.entry_field.delete(0, tk.END)
 
     def update_chat(self, msg):
         self.chat_window.config(state='normal')
