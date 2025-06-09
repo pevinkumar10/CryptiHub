@@ -2,7 +2,7 @@
 
 A secure chat application featuring room-based end-to-end encryption, designed to protect your communications from eavesdropping.
 
-## Key Features
+## Key Features:
 
 - 🔒 **End-to-End Encryption** using Fernet (AES-256)
 - 🛡️ **Room-Based Authentication** with unique keys
@@ -10,17 +10,21 @@ A secure chat application featuring room-based end-to-end encryption, designed t
 - 🧵 **Thread-Safe** socket handling
 - 🔑 **PBKDF2 Key Derivation** (1.2M iterations)
 
-## Installation
+## Installation:
 
 ```bash
 git clone https://github.com/pevinkumar10/CryptiHub.git
 cd CryptiHub
 ```
-### Install dependencies
-
-```bash
-pip3 install -r requirements.txt
-```
+### Install dependencies:
+- In windows
+   ```bash
+      pip3 install -r requirements.txt
+   ```
+- In Linux
+   ```bash
+      apt-get install python3-tk
+   ```
 
 ## Configuring CryptiHub:
 - Configuring Server:
@@ -37,23 +41,22 @@ pip3 install -r requirements.txt
         PORT = 1234
 
         ```
-## 
 
-## Usage
+## Usage:
 
-### Starting the Server
+### Starting the Server:
 ```bash
 python3 server/server.py
 ```
 
-### Connecting Clients
+### Connecting Clients:
 ```bash
 
 python3 clients/client.py
 
 ```
 
-## Security Architecture
+## Security Architecture:
 
 1. **Key Derivation**  
    Uses PBKDF2-HMAC-SHA256 with:
@@ -69,7 +72,7 @@ python3 clients/client.py
    - Clients must prove room ID to enter the chat
    - Username collision prevention
 
-## Limitations
+## Limitations:
 
 ⚠️ **Note**: This implementation uses symmetric encryption with a shared room key. For true E2EE where the server cannot decrypt messages, consider:
 
@@ -77,6 +80,6 @@ python3 clients/client.py
 2. Adding ephemeral session keys
 3. Client-side key storage
 
-## License
+## License:
 
 [MIT](./LICENSE) © 2025 PevinKumar A
