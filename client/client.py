@@ -18,11 +18,31 @@ PORT = 1234
 BUFFER_SIZE = 1024
 
 class CryptoGraphicHandler:
-    def __init__(self,password):
+    """
+        Class to handle cryptographic operations.
+        Args:
+            password (str): Password used for encryption and decryption.
+        Returns:
+            None
+    """
+    def __init__(self,password: str) ->None:
+        """
+            Initialize the CryptoGraphicHandler with a password.
+            Args:
+                password (str): The password to be used for encryption and decryption.
+            Returns:
+                None
+        """
         self.password = password
 
-    def encrpt_message(self,message):
-        # Function to encrypt the message before brodcasting.
+    def encrpt_message(self,message: str) -> bytes:
+        """
+            Function to encrypt the message before broadcasting.
+            Args:
+                message (str): The message to be encrypted.
+            Returns:
+                bytes: The encrypted message encoded in base64.
+        """
         salt = os.urandom(16)
         kdf = PBKDF2HMAC(
             algorithm=hashes.SHA256(),
@@ -37,8 +57,14 @@ class CryptoGraphicHandler:
         encrypted_message=fernet.encrypt(message.encode())
         return b64encode(salt + encrypted_message)
     
-    def decrypt_message(self,encrypted_data):
-        # Function to decrypt the encrypted data.
+    def decrypt_message(self,encrypted_data: bytes) -> str:
+        """
+            Function to decrypt the exfiltrated data.
+            Args:
+                encrypted_data (bytes): The encrypted data to be decrypted.
+            Returns:
+                str: The decrypted message.
+        """
         raw_data = b64decode(encrypted_data)
         salt = raw_data[:16]
         encrypted_message = raw_data[16:]
@@ -56,7 +82,21 @@ class CryptoGraphicHandler:
         return decrypted.decode()
     
 class ChatClient:
-    def __init__(self, root):
+    """
+        ChatClient class to handle the chat client GUI and communication with the server.
+        Args:
+            root (tk.Tk): The root window of the tkinter application.
+        Returns:
+            None
+    """
+    def __init__(self, root) -> None:
+        """
+            Initialize the ChatClient with the root window.
+            Args:
+                root (tk.Tk): The root window of the tkinter application.
+            Returns:
+                None
+        """
         self.root = root
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.cryptogrphic_handler = None
@@ -77,7 +117,14 @@ class ChatClient:
 
         self.connect_to_server()
 
-    def connect_to_server(self):
+    def connect_to_server(self) -> None:
+        """
+            Function to connetc the client to the Cryptihub server.
+            Args:
+                None
+            Returns:
+                None
+        """
         try:
             self.sock.connect((HOST, PORT))
             banner = self.sock.recv(BUFFER_SIZE).decode()
@@ -96,18 +143,23 @@ class ChatClient:
         except Exception as e:
             self.update_chat(f"Connection error: {e}")
 
-    def room_verification(self):
+    def room_verification(self) -> bool:
+        """
+            Function to verify the room.
+            Args:
+                None
+            Returns:
+                bool: True if verified , False if not verified.
+        """
         for attempt in range(1, 4):
             room_id = simple_input_popup(self.root, f"Enter room ID (Attempt {attempt})")
 
             if room_id is None:
                 return False
-            
-            # initalaizing cryptographic handler.
+
             self.cryptogrphic_handler = CryptoGraphicHandler(password=room_id)
 
             encrypted_room_id = self.cryptogrphic_handler.encrpt_message(room_id)
-
             self.sock.sendall(encrypted_room_id)
 
             encrypted_room_verification_data = self.sock.recv(BUFFER_SIZE)
@@ -118,18 +170,27 @@ class ChatClient:
             self.update_chat(f"\tServer: {result['message']}")
             if result["status"] == "True":
                 return True
+            
         return False
 
-    def set_username(self):
+    def set_username(self) -> bool:
+        """
+            Function to setup the username.
+            Args:
+                None
+            Returns:
+                bool: True if username set ,False if username isn't set.
+        """
         while True:
             username = simple_input_popup(self.root, "Enter your username:")
             if username is None or not username.strip():
                 self.update_chat("Username cannot be empty. Please try again.")
                 continue
+
             if len(username) > 20:
                 self.update_chat("Username is too long. Please enter a username with 20 characters or less.")
                 continue
-            # Encrypting username before sending.
+
             encrypted_data = self.cryptogrphic_handler.encrpt_message(username)
             self.sock.sendall(encrypted_data)
 
@@ -141,23 +202,41 @@ class ChatClient:
             if result['status'] == "True":
                 self.update_chat(f"\tServer: {result['message']}")
                 return True
+            
             else:
                 continue
 
-    def receive_data(self):
+    def receive_data(self) -> None:
+        """
+            Function to recieve the message.
+            Args:
+                None
+            Returns:
+                None
+        """
         while not self.stop_event.is_set():
             try:
                 encrypted_data = self.sock.recv(BUFFER_SIZE).decode().strip()
                 decrypted_message = self.cryptogrphic_handler.decrypt_message(encrypted_data)
+
                 if not decrypted_message or decrypted_message.lower() == "exit":
                     self.stop_event.set()
                     break
+
                 self.update_chat(decrypted_message)
+
             except:
                 self.stop_event.set()
                 break
 
-    def send_message(self):
+    def send_message(self) -> None:
+        """
+            Function to send the message.
+            Args:
+                None
+            Returns:
+                None
+        """
         send_message = self.entry_field.get().strip()
         if send_message:
             if send_message.lower() == "exit":
@@ -171,13 +250,28 @@ class ChatClient:
                 self.sock.sendall(encrypted_message)
                 self.entry_field.delete(0, tk.END)
 
-    def update_chat(self, msg):
+    def update_chat(self, msg: str) -> None:
+        """
+            Function to used to update the chat.
+            Args:
+                msg (str): Message to update in the chat.
+            Returns:
+                None
+        """
         self.chat_window.config(state='normal')
         self.chat_window.insert(tk.END, msg + "\n")
         self.chat_window.yview(tk.END)
         self.chat_window.config(state='disabled')
 
-def simple_input_popup(root, prompt):
+def simple_input_popup(root, prompt: str) -> str:
+    """
+        Function to decrypt the exfiltrated data.
+        Args:
+            root (tk.Tk): The root window of the tkinter application.
+            prompt (str): The prompt message to display in the input dialog.
+        Returns:
+            str: The user input from the dialog, or None if cancelled.
+    """
     input_win = tk.Toplevel(root)
     input_win.title("Input Required")
     input_win.geometry("300x120+100+100")
@@ -189,6 +283,13 @@ def simple_input_popup(root, prompt):
     entry.focus()
 
     def close_win():
+        """
+            Function to close the window
+            Args:
+                None
+            Returns:
+                None
+        """
         input_win.destroy()
 
     tk.Button(input_win, text="OK", command=close_win).pack()

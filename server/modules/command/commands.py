@@ -4,8 +4,20 @@ try:
 except ImportError as Ie:
     print(f"Error [modules.command]:{Ie} ")
 
-class ServerCommands():
-    def help(self):
+class ServerCommands:
+    """
+        Class to handle the server commands.
+    """
+    def help(self) -> str:
+        """
+            Function to get the help menu for the CryptiHub.
+
+            Args:
+                None
+
+            Returns:
+                str: Returns help menu for the CryptiHub
+        """
         return """
     ###########################################################################
     ###########################################################################
@@ -16,38 +28,21 @@ class ServerCommands():
     ####                                                                   ####
     ###     /users                  - To see all the users in the chat.     ###
     ####                                                                   ####
-    ###     /ban                    - To ban a user.                        ###
-    ####                                                                   ####
-    ###     /unban                  - To unban a user.                      ###
-    ####                                                                   ####
-    ###     /kick                   - To remove a user from chat.           ###
+    ###     /stop                   - To stop the server.                   ###
     ####                                                                   ####
     ###                                                                     ###
     ###########################################################################
     ###########################################################################
 """
 
-    def get_all_users(self,users):
+    def get_all_users(self,users : dict) -> list:
+        """
+            Function to get all the users in the chat.
+
+            Args:
+                Users in dict
+
+            Returns:
+                List: Username of all users in the chat as list.
+        """
         return users.keys()
-    
-    # def info_broadcaster(self,username,state):
-    #     with connected_host_lock:
-    #         for value in connected_users.values():
-    #             address=value['address']
-    #             conn=value['conn']
-    #             try:
-    #                 send_message=f"\tserver: {username} is {state} from the chat"
-    #                 conn.sendall(send_message.encode())
-    #                 conn.sendall("exit".encode())
-                    
-    #             except Exception as E:
-    #                 print(f"couldn't proadcast message 2: {E}")
-
-    #             finally:
-    #                 conn.close()
-
-    # def kickout_user(self,username):
-    #     with connected_host_lock:
-    #         if username in connected_users:
-    #             del connected_users[username]
-    #     self.info_broadcaster(username,"kicked")
